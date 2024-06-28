@@ -1,6 +1,6 @@
 document.getElementById('talkgroup-form').addEventListener('submit', function(e) {
     e.preventDefault();
-    const tgid = document.getElementById('talkgroup').value;
+    const tgid = encodeURIComponent(document.getElementById('talkgroup').value);
     fetch(`/tune/${tgid}`).then(response => response.text()).then(data => alert(data));
 });
 
