@@ -4,8 +4,22 @@ document.getElementById('talkgroup-form').addEventListener('submit', function(e)
     fetch(`/tune/${tgid}`).then(response => response.text()).then(data => alert(data));
 });
 
-document.getElementById('mode-form').addEventListener('submit', function(e) {
-    e.preventDefault();
+function updateTalkgroups() {
     const mode = document.getElementById('mode').value;
-    fetch(`/mode/${mode}`).then(response => response.text()).then(data => alert(data));
+    fetch(`/mode/${mode}`)
+        .then(response => response.json())
+        .then(talkgroups => {
+            const talkgroupSelect = document.getElementById('talkgroup');
+            talkgroupSelect.innerHTML = '';
+            talkgroups.forEach(tg => {
+                const option = document.createElement('option');
+                option.value = tg.tgid;
+                option.textContent = `${tg.alias} (${tg.tgid})`;
+                talkgroupSelect.appendChild(option);
+            });
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateTalkgroups();
 });

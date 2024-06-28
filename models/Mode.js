@@ -7,13 +7,19 @@
  * LICENSE file that was distributed with this source code.
  */
 
+const Talkgroup = require("./Talkgroup");
+
 class Mode {
-    constructor(name) {
+    constructor(name, talkgroups = []) {
         this.name = name;
+        this.talkgroups = talkgroups.map(tg => new Talkgroup(tg.alias, tg.tgid));
     }
 
-    static getAllModes() {
-        return ['DMR', 'YSF', 'P25', 'DSTAR', 'NXDN'].map(mode => new Mode(mode));
+    static fromYAML(yamlData) {
+        return yamlData.modes.map(mode => {
+            const modeName = Object.keys(mode)[0];
+            return new Mode(modeName, mode[modeName].talkgroups);
+        });
     }
 }
 

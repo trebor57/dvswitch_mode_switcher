@@ -12,10 +12,6 @@ class Talkgroup {
         this.alias = alias;
         this.tgid = tgid;
     }
-
-    static fromYAML(yamlData) {
-        return yamlData.aliases.map(alias => new Talkgroup(alias.alias, alias.tgid));
-    }
 }
 
 module.exports = Talkgroup;

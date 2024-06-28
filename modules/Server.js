@@ -12,7 +12,6 @@ const { exec } = require('child_process');
 const path = require('path');
 const yaml = require('yaml');
 const fs = require('fs');
-const Talkgroup = require('../models/Talkgroup');
 const Mode = require('../models/Mode');
 
 class Server {
@@ -23,7 +22,6 @@ class Server {
         this.port = this.config.port || 3000;
         this.dvswitchPath = this.config.dvswitch_path;
         this.aliasPath = this.config.alias_path;
-        this.aliases = Talkgroup.fromYAML(yaml.parse(fs.readFileSync(this.aliasPath, 'utf8')));
 
         if (!this.dvswitchPath) {
             throw new Error('dvswitch_path is required in the config file');
@@ -32,6 +30,8 @@ class Server {
         if (!this.aliasPath) {
             throw new Error('alias_path is required in the config file');
         }
+
+        this.modes = Mode.fromYAML(yaml.parse(fs.readFileSync(this.aliasPath, 'utf8')));
 
         this.app = express();
         this.app.set('view engine', 'ejs');
@@ -42,12 +42,11 @@ class Server {
 
     setupRoutes() {
         this.app.get('/', (req, res) => {
-            const modes = Mode.getAllModes();
-            res.render('index', { modes, aliases: this.aliases });
+            res.render('index', { modes: this.modes });
         });
 
         this.app.get('/tune/:tgid', (req, res) => {
-            const tgid = req.params.tgid;
+            const tgid = decodeURIComponent(req.params.tgid);
             exec(`${this.dvswitchPath} tune ${tgid}`, (error, stdout, stderr) => {
                 if (error) {
                     return res.status(500).send(`Error: ${stderr}`);
@@ -58,13 +57,17 @@ class Server {
         });
 
         this.app.get('/mode/:mode', (req, res) => {
-            const mode = req.params.mode;
-            exec(`${this.dvswitchPath} mode ${mode}`, (error, stdout, stderr) => {
+            const modeName = req.params.mode;
+            const mode = this.modes.find(m => m.name === modeName);
+            if (!mode) {
+                return res.status(404).send(`Mode ${modeName} not found`);
+            }
+            exec(`${this.dvswitchPath} mode ${modeName}`, (error, stdout, stderr) => {
                 if (error) {
                     return res.status(500).send(`Error: ${stderr}`);
                 }
-                console.log(`Switched to mode: ${mode}`);
-                res.send(`Switched to mode: ${mode}`);
+                console.log(`Switched to mode: ${modeName}`);
+                res.json(mode.talkgroups);
             });
         });
     }

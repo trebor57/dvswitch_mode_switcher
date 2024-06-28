@@ -5,11 +5,35 @@
 # For the full copyright and license information,
 # see the LICENSE file that was distributed with this source code.
 
-# Defines the aliases for talkgroup id's
-aliases:
-  - alias: "Talkgroup 1"
-    tgid: "1"
-  - alias: "Talkgroup 2"
-    tgid: "2"
-  - alias: "Talkgroup 3"
-    tgid: "3"
+# Defines the talkgroup id's and aliases for the modes
+modes:
+  - DMR:
+      talkgroups:
+        - tgid: "1"
+          alias: DMR 1
+        - tgid: "2"
+          alias: DMR 2
+  - YSF:
+      talkgroups:
+        - tgid: "11"
+          alias: YSF 1
+        - tgid: "22"
+          alias: YSF 2
+  - P25:
+      talkgroups:
+        - tgid: "12"
+          alias: P25 1
+        - tgid: "23"
+          alias: P25 2
+  - DSTAR:
+      talkgroups:
+        - tgid: "13"
+          alias: DSTAR 1
+        - tgid: "24"
+          alias: DSTAR 2
+  - NXDN:
+      talkgroups:
+        - tgid: "14"
+          alias: NXDN 1
+        - tgid: "25"
+          alias: NXDN 2

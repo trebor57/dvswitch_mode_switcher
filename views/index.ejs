@@ -10,29 +10,24 @@
 <div class="container">
     <h1 class="mt-5">DVSwitch Mode Switcher</h1>
     <div class="mt-4">
-        <h3>Switch Talkgroup</h3>
-        <form id="talkgroup-form">
-            <div class="form-group">
-                <label for="talkgroup">Talkgroup</label>
-                <select class="form-control" id="talkgroup">
-                    <% aliases.forEach(alias => { %>
-                        <option value="<%= alias.tgid %>"><%= alias.alias %> (<%= alias.tgid %>)</option>
-                    <% }) %>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Switch</button>
-        </form>
-    </div>
-    <div class="mt-4">
         <h3>Switch Mode</h3>
         <form id="mode-form">
             <div class="form-group">
                 <label for="mode">Mode</label>
-                <select class="form-control" id="mode">
+                <select class="form-control" id="mode" onchange="updateTalkgroups()">
                     <% modes.forEach(mode => { %>
                         <option value="<%= mode.name %>"><%= mode.name %></option>
                     <% }) %>
                 </select>
+            </div>
+        </form>
+    </div>
+    <div class="mt-4">
+        <h3>Switch Talkgroup</h3>
+        <form id="talkgroup-form">
+            <div class="form-group">
+                <label for="talkgroup">Talkgroup</label>
+                <select class="form-control" id="talkgroup"></select>
             </div>
             <button type="submit" class="btn btn-primary">Switch</button>
         </form>
