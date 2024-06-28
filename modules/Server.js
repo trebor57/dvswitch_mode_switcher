@@ -20,6 +20,7 @@ class Server {
         this.config = yaml.parse(configFile);
         this.address = this.config.address || "0.0.0.0";
         this.port = this.config.port || 3000;
+        this.tgReloadTime = this.config.tgReloadInterval || 0;
         this.dvswitchPath = this.config.dvswitch_path;
         this.aliasPath = this.config.alias_path;
 
@@ -110,6 +111,7 @@ class Server {
 
     startTgFileReload(interval) {
         this.tgReloadInterval = setInterval(() => {
+            console.log('Reloading talkgroups file');
             this.modes = this.getModes();
         }, interval);
     }

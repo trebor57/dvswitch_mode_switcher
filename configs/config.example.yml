@@ -11,6 +11,9 @@ address: 0.0.0.0
 # Port to bind the server to
 port: 3006
 
+# Interval to reload the TG list
+tgReloadInterval: 60000 # (ms)
+
 # Path to the dvswitch bash file
 dvswitch_path: "/opt/MMDVM_Bridge/dvswitch.sh"
 

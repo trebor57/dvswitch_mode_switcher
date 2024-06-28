@@ -26,6 +26,7 @@ function updateTalkgroups() {
                 option.textContent = `${tg.alias} (${tg.tgid})`;
                 talkgroupSelect.appendChild(option);
             });
+
             alert("Switched to mode: " + mode);
         });
 }
