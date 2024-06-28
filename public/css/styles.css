@@ -120,3 +120,22 @@ body.dark-mode .form-control {
     color: #f8f9fa;
     border: 1px solid #6c757d;
 }
+
+#message-banner {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    text-align: center;
+}
+
+#message-banner.info {
+    background-color: #17a2b8;
+    color: #ffffff;
+}
+
+body.dark-mode #message-banner.info {
+    background-color: #0c5460;
+    color: #d1ecf1;
+}

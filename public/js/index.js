@@ -10,7 +10,7 @@
 document.getElementById('talkgroup-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const tgid = encodeURIComponent(document.getElementById('talkgroup').value);
-    fetch(`/tune/${tgid}`).then(response => response.text()).then(data => alert(data));
+    fetch(`/tune/${tgid}`).then(response => response.text()).then(data => showMessage(`Switched to talkgroup ID: ${tgid}`));
 });
 
 function updateTalkgroups() {
@@ -27,10 +27,19 @@ function updateTalkgroups() {
                 talkgroupSelect.appendChild(option);
             });
 
-            alert("Switched to mode: " + mode);
+            showMessage(`Switched to mode: ${mode}`);
         });
 }
 
+function showMessage(message) {
+    const banner = document.getElementById('message-banner');
+    banner.textContent = message;
+    banner.style.display = 'block';
+    setTimeout(() => {
+        banner.style.display = 'none';
+    }, 3000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    //updateTalkgroups(); // Dont do for now, come back later and revisit
+    // updateTalkgroups(); // Don't do for now, come back later and revisit
 });
