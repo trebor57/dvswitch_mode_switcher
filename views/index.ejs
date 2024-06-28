@@ -17,6 +17,7 @@
             <div class="form-group">
                 <label for="mode">Mode</label>
                 <select class="form-control" id="mode" onchange="updateTalkgroups()">
+                    <option value="">Select a mode</option>
                     <% modes.forEach(mode => { %>
                         <option value="<%= mode.name %>"><%= mode.name %></option>
                     <% }) %>
