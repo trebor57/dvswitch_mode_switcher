@@ -21,5 +21,5 @@ function updateTalkgroups() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    updateTalkgroups();
+    //updateTalkgroups(); // Dont do for now, come back later and revisit
 });

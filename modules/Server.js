@@ -31,18 +31,50 @@ class Server {
             throw new Error('alias_path is required in the config file');
         }
 
-        this.modes = Mode.fromYAML(yaml.parse(fs.readFileSync(this.aliasPath, 'utf8')));
+        const aliasFile = fs.readFileSync(this.aliasPath, 'utf8');
+        this.modes = Mode.fromYAML(yaml.parse(aliasFile));
 
         this.app = express();
         this.app.set('view engine', 'ejs');
         this.app.set('views', path.join(__dirname, '../views'));
         this.app.use(express.static(path.join(__dirname, '../public')));
+        this.app.use(express.json());
         this.setupRoutes();
     }
 
     setupRoutes() {
         this.app.get('/', (req, res) => {
             res.render('index', { modes: this.modes });
+        });
+
+        this.app.get('/edit', (req, res) => {
+            res.render('edit', { modes: this.modes });
+        });
+
+        this.app.get('/talkgroups/:mode', (req, res) => {
+            const modeName = req.params.mode;
+            const mode = this.modes.find(m => m.name === modeName);
+            if (!mode) {
+                return res.status(404).send(`Mode ${modeName} not found`);
+            }
+            res.json(mode.talkgroups);
+        });
+
+        this.app.post('/save', (req, res) => {
+            const { mode, talkgroups } = req.body;
+            const modeIndex = this.modes.findIndex(m => m.name === mode);
+            if (modeIndex === -1) {
+                return res.status(404).send(`Mode ${mode} not found`);
+            }
+            this.modes[modeIndex].talkgroups = talkgroups;
+
+            const yamlData = { modes: this.modes.map(m => ({ [m.name]: { talkgroups: m.talkgroups } })) };
+            try {
+                fs.writeFileSync(this.aliasPath, yaml.stringify(yamlData), 'utf8');
+                res.send('Talkgroups file saved successfully');
+            } catch (error) {
+                res.status(400).send(`Error saving Talkgroups file: ${error.message}`);
+            }
         });
 
         this.app.get('/tune/:tgid', (req, res) => {
