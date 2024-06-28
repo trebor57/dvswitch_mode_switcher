@@ -1,0 +1,15 @@
+# This file is part of the DVSwitch Mode Switcher project.
+#
+# (c) 2024 Caleb <ko4uyj@gmail.com>
+#
+# For the full copyright and license information,
+# see the LICENSE file that was distributed with this source code.
+
+# Defines the aliases for talkgroup id's
+aliases:
+  - alias: "Talkgroup 1"
+    tgid: "1"
+  - alias: "Talkgroup 2"
+    tgid: "2"
+  - alias: "Talkgroup 3"
+    tgid: "3"

@@ -1,0 +1,18 @@
+# This file is part of the DVSwitch Mode Switcher project.
+#
+# (c) 2024 Caleb <ko4uyj@gmail.com>
+#
+# For the full copyright and license information,
+# see the LICENSE file that was distributed with this source code.
+
+# Address to bind the server to
+address: 0.0.0.0
+
+# Port to bind the server to
+port: 3006
+
+# Path to the dvswitch bash file
+dvswitch_path: "echo"
+
+# Path to the tg alias file
+alias_path: "./configs/tg_alias.yml"
