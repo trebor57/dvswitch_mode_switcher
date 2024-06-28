@@ -17,11 +17,11 @@ modes:
           alias: WorldWide
         - tgid: "3100"
           alias: USA
-          - tgid: "31010"
+        - tgid: "31010"
           alias: Alabama-Link
         - tgid: "yourtgifpasswordhere@tgif.network:62031!0"
           alias: TGIFNetwork Select
-          - tgid: "yourbrandmeisterpasswordhere@3102.repeater.net:62031!4000"
+        - tgid: "yourbrandmeisterpasswordhere@3102.repeater.net:62031!4000"
           alias: Brandmeister Select
   - YSF:
       talkgroups:
