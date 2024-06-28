@@ -31,8 +31,7 @@ class Server {
             throw new Error('alias_path is required in the config file');
         }
 
-        const aliasFile = fs.readFileSync(this.aliasPath, 'utf8');
-        this.modes = Mode.fromYAML(yaml.parse(aliasFile));
+        this.modes = this.getModes();
 
         this.app = express();
         this.app.set('view engine', 'ejs');
@@ -104,7 +103,34 @@ class Server {
         });
     }
 
+    getModes() {
+        const aliasFile = fs.readFileSync(this.aliasPath, 'utf8');
+        return Mode.fromYAML(yaml.parse(aliasFile));
+    }
+
+    startTgFileReload(interval) {
+        this.tgReloadInterval = setInterval(() => {
+            this.modes = this.getModes();
+        }, interval);
+    }
+
+    stopTgFileReload() {
+        if (!this.tgReloadInterval) {
+            return;
+        }
+
+        clearInterval(this.tgReloadInterval);
+    }
+
     start() {
+        if (this.tgReloadTime && this.tgReloadTime > 0) {
+            if (this.tgReloadInterval) {
+                this.stopTgFileReload();
+            }
+
+            this.startTgFileReload(this.tgReloadTime);
+        }
+
         this.app.listen(this.port, this.address, () => {
             console.log(`Server is running on http://${this.address}:${this.port}`);
         });
