@@ -9,31 +9,53 @@
 modes:
   - DMR:
       talkgroups:
-        - tgid: "1"
-          alias: DMR 1
-        - tgid: "2"
-          alias: DMR 2
+        - tgid: "4000"
+          alias: DISCONNECT
+        - tgid: "9990#"
+          alias: PARROT
+        - tgid: "91"
+          alias: WorldWide
+        - tgid: "3100"
+          alias: USA
+        - tgid: "31010"
+          alias: Alabama-Link
+        - tgid: "yourtgifpasswordhere@tgif.network:62031!0"
+          alias: TGIFNetwork Select
+        - tgid: "yourbrandmeisterpasswordhere@3102.repeater.net:62031!4000"
+          alias: Brandmeister Select
   - YSF:
       talkgroups:
-        - tgid: "11"
-          alias: YSF 1
-        - tgid: "22"
-          alias: YSF 2
+        - tgid: "register.ysfreflector.de:42020"
+          alias: PARROT
+        - tgid: "americalink.hamfm.com:42000"
+          alias: US-AMERICA-LINK
+        - tgid: "ysf.kansascitywide.com:42000"
+          alias: US-KCWide
   - P25:
       talkgroups:
-        - tgid: "12"
-          alias: P25 1
-        - tgid: "23"
-          alias: P25 2
+        - tgid: "9999"
+          alias: Disconnect
+        - tgid: "10"
+          alias: Parrot
+        - tgid: "10100"
+          alias: WorldWide
+        - tgid: "31010"
+          alias: Alabama-Link
+        - tgid: "31088"
+          alias: ColoradoHD
   - DSTAR:
       talkgroups:
-        - tgid: "13"
-          alias: DSTAR 1
-        - tgid: "24"
-          alias: DSTAR 2
+        - tgid: "REF030CL"
+          alias: REF030C
+        - tgid: "       U"
+          alias: Unlink
+        - tgid: "REF001EL"
+          alias: Echo (Parrot)
   - NXDN:
       talkgroups:
-        - tgid: "14"
-          alias: NXDN 1
-        - tgid: "25"
-          alias: NXDN 2
+        - tgid: "9999"
+          alias: Unlink
+        - tgid: "10"
+          alias: Parrot
+        - tgid: "31088"
+          alias: ColoradoHD
