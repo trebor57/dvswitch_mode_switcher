@@ -83,13 +83,13 @@
 
     toggleAudioButton.addEventListener('click', () => {
         if (!audioStarted) {
-            let validCall = false;
-            let endOfCall = false;
-
             if (!pcmPlayer) {
                 pcmPlayer = new PCMPlayer({ encoding: '16bitInt', channels: 1, sampleRate: 8000 });
 
                 socket.on('audio', (data) => {
+                    let validCall = false;
+                    let endOfCall = false;
+
                     if (!endOfCall && data.byteLength === 32) {
                         console.log('End of call');
                         endOfCall = true;
