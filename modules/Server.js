@@ -58,15 +58,19 @@ class Server {
 
     setupRoutes() {
         this.app.get('/', (req, res) => {
-            res.render('index', { modes: this.modes });
+            res.render('index', { modes: this.modes, usrpEnabled: this.usrpEnabled });
         });
 
         this.app.get('/audio', (req, res) => {
-            res.render('audio');
+            if (!this.usrpEnabled) {
+                return res.status(404).send('2 Way audio is not enabled');
+            }
+
+            res.render('audio', { usrpEnabled: this.usrpEnabled});
         });
 
         this.app.get('/edit', (req, res) => {
-            res.render('edit', { modes: this.modes });
+            res.render('edit', { modes: this.modes, usrpEnabled: this.usrpEnabled });
         });
 
         this.app.get('/talkgroups/:mode', (req, res) => {

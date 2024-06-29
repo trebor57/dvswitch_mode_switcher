@@ -11,9 +11,11 @@
             <li class="nav-item">
                 <a class="nav-link" href="/edit">Edit Talkgroups</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/audio">2 Way Audio</a>
-            </li>
+            <% if (usrpEnabled) {%>
+                <li class="nav-item">
+                    <a class="nav-link" href="/audio">2 Way Audio</a>
+                </li>
+            <% } %>
         </ul>
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
