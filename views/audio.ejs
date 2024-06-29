@@ -6,18 +6,65 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <title>2 Way Audio</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .status-light {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .cos-light {
+            background-color: grey;
+        }
+
+        .ptt-light {
+            background-color: grey;
+        }
+
+        .active {
+            background-color: green;
+        }
+
+        .transmitting {
+            background-color: red;
+        }
+
+        .btn-group-custom {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .status-indicators {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .status-indicators span {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 <%- include('partials/header') %>
 
-<div class="container" id="audio-container">
+<div class="container text-center" id="audio-container">
     <h2>2 Way Audio</h2>
-    <div class="btn-group" role="group" aria-label="Audio Controls">
-        <button id="startAudio" class="btn btn-success">Start Audio</button>
-        <button id="stopAudio" class="btn btn-danger">Stop Audio</button>
+    <div class="btn-group btn-group-custom" role="group" aria-label="Audio Controls">
+        <button id="toggleAudio" class="btn btn-success">Start Audio</button>
     </div>
-    <div class="btn-group mt-3" role="group" aria-label="PTT Controls">
+    <div class="btn-group btn-group-custom" role="group" aria-label="PTT Controls">
         <button id="ptt" class="btn btn-primary">Push To Talk</button>
+    </div>
+    <div class="status-indicators">
+        <span>COS:</span> <span class="status-light cos-light" id="cosLight"></span>
+        <span>PTT:</span> <span class="status-light ptt-light" id="pttLight"></span>
     </div>
 </div>
 
@@ -29,31 +76,64 @@
     const socket = io();
     let pcmPlayer;
     let seq = 0;
+    const cosLight = document.getElementById('cosLight');
+    const pttLight = document.getElementById('pttLight');
+    const toggleAudioButton = document.getElementById('toggleAudio');
+    let audioStarted = false;
 
-    document.getElementById('startAudio').addEventListener('click', () => {
-        if (!pcmPlayer) {
-            pcmPlayer = new PCMPlayer({ encoding: '16bitInt', channels: 1, sampleRate: 8000 });
+    toggleAudioButton.addEventListener('click', () => {
+        if (!audioStarted) {
+            let validCall = false;
+            let endOfCall = false;
 
-            socket.on('audio', (data) => {
-                console.log('Audio data received');
-                const audioData = data.slice(32); // Just dropping the header for now
-                pcmPlayer.feed(new Uint8Array(audioData));
-            });
+            if (!pcmPlayer) {
+                pcmPlayer = new PCMPlayer({ encoding: '16bitInt', channels: 1, sampleRate: 8000 });
 
-            console.log('Audio started');
+                socket.on('audio', (data) => {
+                    if (!endOfCall && data.byteLength === 32) {
+                        console.log('End of call');
+                        endOfCall = true;
+                    } else if (!endOfCall && data.byteLength === 352){
+                        validCall = true;
+                    }
+
+                    console.log('Audio data received');
+                    const audioData = data.slice(32); // Just dropping the header for now
+
+                    if (!endOfCall && validCall) {
+                        pcmPlayer.feed(new Uint8Array(audioData));
+                        cosLight.classList.add('active');
+                    }
+
+                    if (endOfCall) {
+                        setTimeout(() => cosLight.classList.remove('active'), 1500);
+                    }
+                });
+
+                console.log('Audio started');
+                toggleAudioButton.textContent = 'Stop Audio';
+                toggleAudioButton.classList.remove('btn-success');
+                toggleAudioButton.classList.add('btn-danger');
+                audioStarted = true;
+            }
+        } else {
+            socket.off('audio');
+            if (pcmPlayer) {
+                pcmPlayer.destroy();
+                pcmPlayer = null;
+            }
+
+            cosLight.classList.remove('active');
+            console.log('Audio stopped');
+            toggleAudioButton.textContent = 'Start Audio';
+            toggleAudioButton.classList.remove('btn-danger');
+            toggleAudioButton.classList.add('btn-success');
+            audioStarted = false;
         }
-    });
-
-    document.getElementById('stopAudio').addEventListener('click', () => {
-        socket.off('audio');
-        if (pcmPlayer) {
-            pcmPlayer.destroy();
-            pcmPlayer = null;
-        }
-        console.log('Audio stopped');
     });
 
     document.getElementById('ptt').addEventListener('mousedown', async () => {
+        pttLight.classList.add('transmitting');
         await setup();
         tpt_generate();
 
@@ -63,6 +143,7 @@
     });
 
     document.getElementById('ptt').addEventListener('mouseup', () => {
+        pttLight.classList.remove('transmitting');
         micCapture.stopCapture();
         console.log('Recording stopped');
     });

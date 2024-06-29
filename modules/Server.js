@@ -24,11 +24,15 @@ class Server {
             this.audioSendPort = this.config.usrp.sendPort || 34010;
             this.audioReceiveAddress = this.config.usrp.receiveAddress || "0.0.0.0"
             this.audioSendAddress = this.config.usrp.sendAddress || "127.0.0.1"
+
+            this.repeaterEnabled = this.config.usrp.repeater.enabled || false;
+            this.repeaterReceivePort = this.config.usrp.repeater.receivePort || 34001;
+            this.repeaterSendPort = this.config.usrp.repeater.sendPort || 32001;
+            this.repeaterReceiveAddress = this.config.usrp.repeater.receiveIp || "0.0.0.0";
+            this.repeaterSendAddress = this.config.usrp.repeater.sendIp || "127.0.0.1";
         } else {
-            this.audioReceivePort = 32005;
-            this.audioSendPort = 34010;
-            this.audioReceiveAddress = "0.0.0.0";
-            this.audioSendAddress = "127.0.0.1";
+            this.usrpEnabled = false;
+            this.repeaterEnabled = false;
         }
 
         if (!this.dvswitchPath) {
@@ -130,23 +134,60 @@ class Server {
         const udpServer = dgram.createSocket('udp4');
 
         udpServer.on('message', (msg) => {
-            //console.log(`Received audio`);
             this.io.emit('audio', msg);
+            if (this.repeaterEnabled) {
+                this.relayToRepeater(msg);
+            }
         });
 
-        udpServer.bind(this.audioReceivePort, () => {
-            console.log(`UDP Server listening on port ${this.audioReceivePort}`);
+        udpServer.bind(this.audioReceivePort, this.audioReceiveAddress, () => {
+            console.log(`Primary UDP Server listening on ${this.audioReceiveAddress}:${this.audioReceivePort}`);
         });
 
         this.io.on('connection', (socket) => {
             socket.on('audio', (msg) => {
-                //console.log(`Sending audio data to ${this.audioSendPort}`);
-                udpServer.send(msg, this.audioSendPort, '127.0.0.1', (err) => {
+                //console.log("Send audio to: " + this.audioSendAddress + ":" + this.audioSendPort);
+                udpServer.send(msg, this.audioSendPort, this.audioSendAddress, (err) => {
                     if (err) {
                         console.error(`Error sending audio data: ${err}`);
                     }
                 });
+                this.relayToRepeater(msg);
             });
+        });
+
+        if (this.repeaterEnabled) {
+            this.setupRepeater();
+        }
+    }
+
+    setupRepeater() {
+        const repeaterUdpServer = dgram.createSocket('udp4');
+
+        repeaterUdpServer.on('message', (msg) => {
+            this.relayToPrimary(msg);
+        });
+
+        repeaterUdpServer.bind(this.repeaterReceivePort, this.repeaterReceiveAddress, () => {
+            console.log(`Repeater UDP Server listening on ${this.repeaterReceiveAddress}:${this.repeaterReceivePort}`);
+        });
+    }
+
+    relayToRepeater(msg) {
+        const repeaterUdpServer = dgram.createSocket('udp4');
+        repeaterUdpServer.send(msg, this.repeaterSendPort, this.repeaterSendAddress, (err) => {
+            if (err) {
+                console.error(`Error relaying to repeater: ${err}`);
+            }
+        });
+    }
+
+    relayToPrimary(msg) {
+        const udpServer = dgram.createSocket('udp4');
+        udpServer.send(msg, this.audioSendPort, this.audioSendAddress, (err) => {
+            if (err) {
+                console.error(`Error relaying to primary: ${err}`);
+            }
         });
     }
 
