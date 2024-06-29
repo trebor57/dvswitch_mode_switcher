@@ -19,3 +19,11 @@ dvswitch_path: "/opt/MMDVM_Bridge/dvswitch.sh"
 
 # Path to the tg alias file
 alias_path: "./configs/tg_alias.yml"
+
+# USRP Info
+usrp:
+  enabled: false
+  receivePort: 34001
+  sendPort: 34002
+  sendIp: 127.0.0.1
+  receiveIp: 0.0.0.0

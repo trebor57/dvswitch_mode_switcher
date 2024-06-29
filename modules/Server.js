@@ -1,17 +1,11 @@
-/**
- * This file is part of the DVSwitch Mode Switcher project.
- *
- * (c) 2024 Caleb <ko4uyj@gmail.com>
- *
- * For the full copyright and license information, see the
- * LICENSE file that was distributed with this source code.
- */
-
 const express = require('express');
 const { exec } = require('child_process');
 const path = require('path');
 const yaml = require('yaml');
 const fs = require('fs');
+const dgram = require('dgram');
+const http = require('http');
+const socketIo = require('socket.io');
 const Mode = require('../models/Mode');
 
 class Server {
@@ -24,6 +18,19 @@ class Server {
         this.dvswitchPath = this.config.dvswitch_path;
         this.aliasPath = this.config.alias_path;
 
+        if (this.config.usrp) {
+            this.usrpEnabled = this.config.usrp.enabled || false;
+            this.audioReceivePort = this.config.usrp.receivePort || 32005;
+            this.audioSendPort = this.config.usrp.sendPort || 34010;
+            this.audioReceiveAddress = this.config.usrp.receiveAddress || "0.0.0.0"
+            this.audioSendAddress = this.config.usrp.sendAddress || "127.0.0.1"
+        } else {
+            this.audioReceivePort = 32005;
+            this.audioSendPort = 34010;
+            this.audioReceiveAddress = "0.0.0.0";
+            this.audioSendAddress = "127.0.0.1";
+        }
+
         if (!this.dvswitchPath) {
             throw new Error('dvswitch_path is required in the config file');
         }
@@ -35,16 +42,27 @@ class Server {
         this.modes = this.getModes();
 
         this.app = express();
+        this.server = http.createServer(this.app);
+        this.io = socketIo(this.server);
+
         this.app.set('view engine', 'ejs');
         this.app.set('views', path.join(__dirname, '../views'));
         this.app.use(express.static(path.join(__dirname, '../public')));
         this.app.use(express.json());
         this.setupRoutes();
+
+        if (this.usrpEnabled) {
+            this.setupAudioStreaming();
+        }
     }
 
     setupRoutes() {
         this.app.get('/', (req, res) => {
             res.render('index', { modes: this.modes });
+        });
+
+        this.app.get('/audio', (req, res) => {
+            res.render('audio');
         });
 
         this.app.get('/edit', (req, res) => {
@@ -104,6 +122,30 @@ class Server {
         });
     }
 
+    setupAudioStreaming() {
+        const udpServer = dgram.createSocket('udp4');
+
+        udpServer.on('message', (msg) => {
+            //console.log(`Received audio`);
+            this.io.emit('audio', msg);
+        });
+
+        udpServer.bind(this.audioReceivePort, () => {
+            console.log(`UDP Server listening on port ${this.audioReceivePort}`);
+        });
+
+        this.io.on('connection', (socket) => {
+            socket.on('audio', (msg) => {
+                //console.log(`Sending audio data to ${this.audioSendPort}`);
+                udpServer.send(msg, this.audioSendPort, '127.0.0.1', (err) => {
+                    if (err) {
+                        console.error(`Error sending audio data: ${err}`);
+                    }
+                });
+            });
+        });
+    }
+
     getModes() {
         const aliasFile = fs.readFileSync(this.aliasPath, 'utf8');
         return Mode.fromYAML(yaml.parse(aliasFile));
@@ -133,7 +175,7 @@ class Server {
             this.startTgFileReload(this.tgReloadTime);
         }
 
-        this.app.listen(this.port, this.address, () => {
+        this.server.listen(this.port, this.address, () => {
             console.log(`Server is running on http://${this.address}:${this.port}`);
         });
     }
