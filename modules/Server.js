@@ -7,6 +7,8 @@ const dgram = require('dgram');
 const http = require('http');
 const socketIo = require('socket.io');
 const Mode = require('../models/Mode');
+const UdpPrimary = require("./UdpPrimary");
+const UdpRepeater = require("./UdpRepeater");
 
 class Server {
     constructor(configPath) {
@@ -20,16 +22,7 @@ class Server {
 
         if (this.config.usrp) {
             this.usrpEnabled = this.config.usrp.enabled || false;
-            this.audioReceivePort = this.config.usrp.receivePort || 32005;
-            this.audioSendPort = this.config.usrp.sendPort || 34010;
-            this.audioReceiveAddress = this.config.usrp.receiveAddress || "0.0.0.0"
-            this.audioSendAddress = this.config.usrp.sendAddress || "127.0.0.1"
-
             this.repeaterEnabled = this.config.usrp.repeater.enabled || false;
-            this.repeaterReceivePort = this.config.usrp.repeater.receivePort || 34001;
-            this.repeaterSendPort = this.config.usrp.repeater.sendPort || 32001;
-            this.repeaterReceiveAddress = this.config.usrp.repeater.receiveIp || "0.0.0.0";
-            this.repeaterSendAddress = this.config.usrp.repeater.sendIp || "127.0.0.1";
         } else {
             this.usrpEnabled = false;
             this.repeaterEnabled = false;
@@ -56,7 +49,13 @@ class Server {
         this.setupRoutes();
 
         if (this.usrpEnabled) {
-            this.setupAudioStreaming();
+            this.udpPrimary = new UdpPrimary(this.config, this.io);
+            this.udpPrimary.bind();
+        }
+
+        if (this.repeaterEnabled) {
+            this.udpRepeater = new UdpRepeater(this.config);
+            this.udpRepeater.bind();
         }
     }
 
@@ -127,67 +126,6 @@ class Server {
                 console.log(`Switched to mode: ${modeName}`);
                 res.json(mode.talkgroups);
             });
-        });
-    }
-
-    setupAudioStreaming() {
-        const udpServer = dgram.createSocket('udp4');
-
-        udpServer.on('message', (msg) => {
-            this.io.emit('audio', msg);
-            if (this.repeaterEnabled) {
-                this.relayToRepeater(msg);
-            }
-        });
-
-        udpServer.bind(this.audioReceivePort, this.audioReceiveAddress, () => {
-            console.log(`Primary UDP Server listening on ${this.audioReceiveAddress}:${this.audioReceivePort}`);
-        });
-
-        this.io.on('connection', (socket) => {
-            socket.on('audio', (msg) => {
-                //console.log("Send audio to: " + this.audioSendAddress + ":" + this.audioSendPort);
-                udpServer.send(msg, this.audioSendPort, this.audioSendAddress, (err) => {
-                    if (err) {
-                        console.error(`Error sending audio data: ${err}`);
-                    }
-                });
-                this.relayToRepeater(msg);
-            });
-        });
-
-        if (this.repeaterEnabled) {
-            this.setupRepeater();
-        }
-    }
-
-    setupRepeater() {
-        const repeaterUdpServer = dgram.createSocket('udp4');
-
-        repeaterUdpServer.on('message', (msg) => {
-            this.relayToPrimary(msg);
-        });
-
-        repeaterUdpServer.bind(this.repeaterReceivePort, this.repeaterReceiveAddress, () => {
-            console.log(`Repeater UDP Server listening on ${this.repeaterReceiveAddress}:${this.repeaterReceivePort}`);
-        });
-    }
-
-    relayToRepeater(msg) {
-        const repeaterUdpServer = dgram.createSocket('udp4');
-        repeaterUdpServer.send(msg, this.repeaterSendPort, this.repeaterSendAddress, (err) => {
-            if (err) {
-                console.error(`Error relaying to repeater: ${err}`);
-            }
-        });
-    }
-
-    relayToPrimary(msg) {
-        const udpServer = dgram.createSocket('udp4');
-        udpServer.send(msg, this.audioSendPort, this.audioSendAddress, (err) => {
-            if (err) {
-                console.error(`Error relaying to primary: ${err}`);
-            }
         });
     }
 
