@@ -14,6 +14,9 @@ nvm use 18
 
 git clone https://github.com/firealarmss/dvswitch_mode_switcher
 cd dvswitch_mode_switcher
+(run these commands if using hamvoip:
+nvm i 14
+nvm use 14)
 npm i
 node index.js -c configs/config.yml
 ```
