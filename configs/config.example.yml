@@ -22,8 +22,15 @@ alias_path: "./configs/tg_alias.yml"
 
 # USRP Info
 usrp:
-  enabled: false
+  enabled: true
   receivePort: 34001
-  sendPort: 34002
-  sendIp: 127.0.0.1
-  receiveIp: 0.0.0.0
+  sendPort: 32001
+  sendAddress: 127.0.0.1
+  receiveAddress: 0.0.0.0
+
+  repeater:
+    enabled: true
+    receivePort: 34010
+    sendPort: 32005
+    sendAddress: 127.0.0.1
+    receiveAddress: 0.0.0.0
