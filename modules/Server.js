@@ -7,8 +7,11 @@ const dgram = require('dgram');
 const http = require('http');
 const socketIo = require('socket.io');
 const Mode = require('../models/Mode');
+const { StatusCodes } = require('../models/StatusCodes');
 const UdpPrimary = require("./UdpPrimary");
 const UdpRepeater = require("./UdpRepeater");
+const GRP_VCH_RSP = require("../models/trunking_data/GRP_VCH_RSP");
+const GRP_VCH_REQ = require("../models/trunking_data/GRP_VCH_REQ");
 
 class Server {
     constructor(configPath) {
@@ -47,6 +50,7 @@ class Server {
         this.app.use(express.static(path.join(__dirname, '../public')));
         this.app.use(express.json());
         this.setupRoutes();
+        this.setupSocket();
 
         if (this.usrpEnabled) {
             this.udpPrimary = new UdpPrimary(this.config, this.io);
@@ -57,6 +61,34 @@ class Server {
             this.udpRepeater = new UdpRepeater(this.config);
             this.udpRepeater.bind();
         }
+    }
+
+    setupSocket() {
+        this.io.on('connection', (socket) => {
+            socket.on("GRP_VCH_REQ", (data) => {
+                const request = new GRP_VCH_REQ(data.srcId, data.dstId);
+                let response = new GRP_VCH_RSP(StatusCodes.GRANT, null, data.srcId, data.dstId);
+
+                console.log(request.toString());
+
+                if (!this.dstIdPermitted(data.srcId, data.dstId)) {
+                    response.status = StatusCodes.DENY;
+                }
+
+                if (!this.srcIdPermitted(data.srcId, data.dstId)) {
+                    response.status = StatusCodes.DENY;
+                }
+
+                response.channel = this.getNewVoiceChannel(data.srcId, data.dstId);
+
+                console.log(response.toString());
+                this.io.emit("GRP_VCH_RSP", response);
+            });
+
+            socket.on("GRP_VCH_REL", (data) => {
+                console.log(`GRP_VCH_REL, channel: ${data.channel} srcId: ${data.srcId}, dstId: ${data.dstId}`);
+            });
+        });
     }
 
     setupRoutes() {
@@ -127,6 +159,18 @@ class Server {
                 res.json(mode.talkgroups);
             });
         });
+    }
+
+    getNewVoiceChannel(srcId, dstId) {
+        return "444.000.000"; // Placeholder for now
+    }
+
+    dstIdPermitted(srcId, dstId) {
+        return true; // Placeholder for now
+    }
+
+    srcIdPermitted(srcId, dstId) {
+        return true; // Placeholder for now
     }
 
     getModes() {

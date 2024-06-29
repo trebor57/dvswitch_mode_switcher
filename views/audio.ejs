@@ -94,10 +94,10 @@
                         console.log('End of call');
                         endOfCall = true;
                     } else if (!endOfCall && data.byteLength === 352){
+                        console.log('Audio data received'); // Should be audio anyway
                         validCall = true;
                     }
 
-                    console.log('Audio data received');
                     const audioData = data.slice(32); // Just dropping the header for now
 
                     if (!endOfCall && validCall) {
@@ -110,7 +110,6 @@
                     }
                 });
 
-                console.log('Audio started');
                 toggleAudioButton.textContent = 'Stop Audio';
                 toggleAudioButton.classList.remove('btn-success');
                 toggleAudioButton.classList.add('btn-danger');
@@ -133,6 +132,29 @@
     });
 
     document.getElementById('ptt').addEventListener('mousedown', async () => {
+        socket.emit("GRP_VCH_REQ", { "dstId": "1", "srcId": "1" });
+
+        socket.on("GRP_VCH_RSP", (data) => {
+            console.log(data);
+            if (data.status === 0) {
+                grantVoiceChannel();
+                console.log('GRP_VCH_RSP grant');
+            } else {
+                denyVoiceChannel();
+                console.log('GRP_VCH_RSP denied');
+            }
+        });
+
+    });
+
+    document.getElementById('ptt').addEventListener('mouseup', () => {
+        socket.emit("GRP_VCH_REL", { "channel": "444.000.000", "dstId": "1", "srcId": "1" });
+        pttLight.classList.remove('transmitting');
+        micCapture.stopCapture();
+        console.log('Recording stopped');
+    });
+
+    async function grantVoiceChannel() {
         pttLight.classList.add('transmitting');
         await setup();
         tpt_generate();
@@ -140,13 +162,12 @@
         micCapture.captureMicrophone(() => {
             console.log('Microphone captured');
         });
-    });
+    }
 
-    document.getElementById('ptt').addEventListener('mouseup', () => {
-        pttLight.classList.remove('transmitting');
-        micCapture.stopCapture();
-        console.log('Recording stopped');
-    });
+    async function denyVoiceChannel() {
+        await setup();
+        bonk();
+    }
 
     function constructUSRPPacket(cmd, packetType, ptt) {
         const audioDataLength = cmd.length;
