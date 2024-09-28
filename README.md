@@ -4,11 +4,15 @@ Basic service to switch modes/talkgroups of a dvswitch server. Defualt webserver
 
 ## Install Process:
 ```bash
+sudo -s
+
 cd /opt
 
 git clone https://github.com/firealarmss/dvswitch_mode_switcher
 
 cd dvswitch_mode_switcher
+
+apt install node.js
 
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
@@ -25,6 +29,8 @@ nvm use 18
 cp configs/config.example.yml configs/config.yml
 
 cp configs/tg_alias.example.yml configs/tg_alias.yml
+
+npm install yargs path
 
 npm i
 
