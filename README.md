@@ -1,6 +1,6 @@
 # DVSwitch Mode Changer
 
-Basic service to switch modes/talkgroups of a dvswitch server. Defualt webserver uses port 3000, you can change it in configs/config.yml. USRP support is also available. Created by Caleb KO4UYJ.
+Basic service to switch modes/talkgroups of a dvswitch server. Defualt webserver uses port 3000, you can change it in configs/config.yml. USRP support is also available.
 
 ## Install Process:
 ```bash
