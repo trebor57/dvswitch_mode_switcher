@@ -1,4 +1,7 @@
 # DVSwitch Mode Changer
+
+Basic service to switch modes/talkgroups of a dvswitch server. Defualt webserver uses port 3000, you can change it in configs/config.yml. USRP support is also available.
+
 ## Install Process:
 ```bash
 cd /opt
@@ -26,4 +29,17 @@ cp configs/tg_alias.example.yml configs/tg_alias.yml
 npm i
 
 node index.js -c configs/config.yml
+```
+
+## Systemd Support:
+```bash
+cd /opt/dvswitch_mode_switcher
+
+cp debian/dvswitch_mode_switcher.service /etc/systemd/system/dvswitch_mode_switcher.service
+
+systemctl daemon-reload
+
+systemctl enable dvswitch_mode_switcher.service
+
+systemctl start dvswitch_mode_switcher.service
 ```
