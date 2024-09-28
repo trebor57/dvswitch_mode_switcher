@@ -1,18 +1,17 @@
-/**
- * This file is part of the DVSwitch Mode Switcher project.
- *
- * (c) 2024 Caleb <ko4uyj@gmail.com>
- *
- * For the full copyright and license information, see the
- * LICENSE file that was distributed with this source code.
- */
-
 const express = require('express');
 const { exec } = require('child_process');
 const path = require('path');
 const yaml = require('yaml');
 const fs = require('fs');
+const dgram = require('dgram');
+const http = require('http');
+const socketIo = require('socket.io');
 const Mode = require('../models/Mode');
+const { StatusCodes } = require('../models/StatusCodes');
+const UdpPrimary = require("./UdpPrimary");
+const UdpRepeater = require("./UdpRepeater");
+const GRP_VCH_RSP = require("../models/trunking_data/GRP_VCH_RSP");
+const GRP_VCH_REQ = require("../models/trunking_data/GRP_VCH_REQ");
 
 class Server {
     constructor(configPath) {
@@ -23,6 +22,14 @@ class Server {
         this.tgReloadTime = this.config.tgReloadInterval || 0;
         this.dvswitchPath = this.config.dvswitch_path;
         this.aliasPath = this.config.alias_path;
+
+        if (this.config.usrp) {
+            this.usrpEnabled = this.config.usrp.enabled || false;
+            this.repeaterEnabled = this.config.usrp.repeater.enabled || false;
+        } else {
+            this.usrpEnabled = false;
+            this.repeaterEnabled = false;
+        }
 
         if (!this.dvswitchPath) {
             throw new Error('dvswitch_path is required in the config file');
@@ -35,20 +42,70 @@ class Server {
         this.modes = this.getModes();
 
         this.app = express();
+        this.server = http.createServer(this.app);
+        this.io = socketIo(this.server);
+
         this.app.set('view engine', 'ejs');
         this.app.set('views', path.join(__dirname, '../views'));
         this.app.use(express.static(path.join(__dirname, '../public')));
         this.app.use(express.json());
         this.setupRoutes();
+        this.setupSocket();
+
+        if (this.usrpEnabled) {
+            this.udpPrimary = new UdpPrimary(this.config, this.io);
+            this.udpPrimary.bind();
+        }
+
+        if (this.repeaterEnabled) {
+            this.udpRepeater = new UdpRepeater(this.config);
+            this.udpRepeater.bind();
+        }
+    }
+
+    setupSocket() {
+        this.io.on('connection', (socket) => {
+            socket.on("GRP_VCH_REQ", (data) => {
+                const request = new GRP_VCH_REQ(data.srcId, data.dstId);
+                let response = new GRP_VCH_RSP(StatusCodes.GRANT, null, data.srcId, data.dstId);
+
+                console.log(request.toString());
+
+                if (!this.dstIdPermitted(data.srcId, data.dstId)) {
+                    response.status = StatusCodes.DENY;
+                }
+
+                if (!this.srcIdPermitted(data.srcId, data.dstId)) {
+                    response.status = StatusCodes.DENY;
+                }
+
+                response.channel = this.getNewVoiceChannel(data.srcId, data.dstId);
+
+                console.log(response.toString());
+                this.io.emit("GRP_VCH_RSP", response);
+            });
+
+            socket.on("GRP_VCH_REL", (data) => {
+                console.log(`GRP_VCH_REL, channel: ${data.channel} srcId: ${data.srcId}, dstId: ${data.dstId}`);
+            });
+        });
     }
 
     setupRoutes() {
         this.app.get('/', (req, res) => {
-            res.render('index', { modes: this.modes });
+            res.render('index', { modes: this.modes, usrpEnabled: this.usrpEnabled });
+        });
+
+        this.app.get('/audio', (req, res) => {
+            if (!this.usrpEnabled) {
+                return res.status(404).send('2 Way audio is not enabled');
+            }
+
+            res.render('audio', { usrpEnabled: this.usrpEnabled});
         });
 
         this.app.get('/edit', (req, res) => {
-            res.render('edit', { modes: this.modes });
+            res.render('edit', { modes: this.modes, usrpEnabled: this.usrpEnabled });
         });
 
         this.app.get('/talkgroups/:mode', (req, res) => {
@@ -104,6 +161,18 @@ class Server {
         });
     }
 
+    getNewVoiceChannel(srcId, dstId) {
+        return "444.000.000"; // Placeholder for now
+    }
+
+    dstIdPermitted(srcId, dstId) {
+        return true; // Placeholder for now
+    }
+
+    srcIdPermitted(srcId, dstId) {
+        return true; // Placeholder for now
+    }
+
     getModes() {
         const aliasFile = fs.readFileSync(this.aliasPath, 'utf8');
         return Mode.fromYAML(yaml.parse(aliasFile));
@@ -133,7 +202,7 @@ class Server {
             this.startTgFileReload(this.tgReloadTime);
         }
 
-        this.app.listen(this.port, this.address, () => {
+        this.server.listen(this.port, this.address, () => {
             console.log(`Server is running on http://${this.address}:${this.port}`);
         });
     }
