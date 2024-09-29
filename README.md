@@ -6,13 +6,13 @@ Basic service to switch modes/talkgroups of a dvswitch server. Defualt webserver
 ```bash
 sudo -s
 
+apt update && apt upgrade && apt install git && apt install nodejs
+
 cd /opt
 
 git clone https://github.com/firealarmss/dvswitch_mode_switcher
 
 cd dvswitch_mode_switcher
-
-apt install node.js
 
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
