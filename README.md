@@ -30,7 +30,8 @@ cp configs/config.example.yml configs/config.yml
 
 cp configs/tg_alias.example.yml configs/tg_alias.yml
 
-npm install yargs path
+npm install yargs path express-session body-parser
+
 
 npm i
 
