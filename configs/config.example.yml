@@ -10,6 +10,8 @@ use_authentication: true
 username: username
 password: change_this
 auth_secret: use_a_complicated_password
+ssl_key_path: /path/to/ssl_key_file
+ssl_cert_path: /path/to/ssl_cert_file
 
 # Address to bind the server to
 address: 0.0.0.0
