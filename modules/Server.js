@@ -28,11 +28,13 @@ class Server {
 	this.useAuthentication = this.config.use_authentication || false;
 	this.username = this.config.username;
 	this.password = this.config.password;
+	this.keyPath = this.config.ssl_key_path;
+        this.certPath = this.config.ssl_cert_path;
 	this.authSecret = this.config.auth_secret;
 
 	this.options = {
-  	    key: fs.readFileSync('keys/client-key.pem'),
-  	    cert: fs.readFileSync('keys/client-cert.pem')
+  	    key: fs.readFileSync(this.keyPath),
+  	    cert: fs.readFileSync(this.certPath)
 	};
 
         if (this.config.usrp) {
