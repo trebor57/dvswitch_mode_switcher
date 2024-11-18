@@ -28,6 +28,7 @@ class Server {
 	this.useAuthentication = this.config.use_authentication || false;
 	this.username = this.config.username;
 	this.password = this.config.password;
+	this.authSecret = this.config.auth_secret;
 
 	this.options = {
   	    key: fs.readFileSync('keys/client-key.pem'),
@@ -57,6 +58,9 @@ class Server {
 	    if (!this.password) {
 	        throw new Error('password is required in the config file when use_authentication is set to true');
             }
+	    if (!this.authSecret) {
+	        throw new Error('auth_secret is required in the config file when use_authentication is set to true');
+            }
 	}
 
         this.modes = this.getModes();
@@ -71,7 +75,7 @@ class Server {
         this.app.use(express.json());
 	this.app.use(bodyParser.urlencoded({ extended: true }));
 	this.app.use(session({
-	    secret: '8697f102-89d0-47ed-9c52-8d67e825a936',
+	    secret: this.authSecret,
             resave: false,
             saveUninitialzed: true,
             cookie: { secure: true }

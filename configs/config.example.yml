@@ -8,7 +8,8 @@
 # Authentication related options
 use_authentication: true
 username: username
-password: change_this$
+password: change_this
+auth_secret: use_a_complicated_password
 
 # Address to bind the server to
 address: 0.0.0.0
