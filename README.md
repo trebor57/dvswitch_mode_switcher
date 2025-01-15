@@ -10,7 +10,7 @@ apt update && apt upgrade && apt install git && apt install nodejs
 
 cd /opt
 
-git clone https://github.com/firealarmss/dvswitch_mode_switcher
+git clone https://github.com/trebor57/dvswitch_mode_switcher
 
 cd dvswitch_mode_switcher
 
